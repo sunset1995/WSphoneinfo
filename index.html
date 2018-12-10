@@ -108,6 +108,27 @@
             this.volume = Math.max(rms, this.volume*this.averaging);
         }
     </script>
+    <script>
+        function parseURLParams(url) {
+            var queryStart = url.indexOf("?") + 1,
+                queryEnd   = url.indexOf("#") + 1 || url.length + 1,
+                query = url.slice(queryStart, queryEnd - 1),
+                pairs = query.replace(/\+/g, " ").split("&"),
+                parms = {}, i, n, v, nv;
+
+            if (query === url || query === "") return;
+
+            for (i = 0; i < pairs.length; i++) {
+                nv = pairs[i].split("=", 2);
+                n = decodeURIComponent(nv[0]);
+                v = decodeURIComponent(nv[1]);
+
+                if (!parms.hasOwnProperty(n)) parms[n] = [];
+                parms[n].push(nv.length === 2 ? v : null);
+            }
+            return parms;
+        }
+    </script>
 </head>
 <body>
 
@@ -125,10 +146,15 @@
 <script>
 
     // Websocket
-    var socket = new WebSocket("wss://192.168.0.13:9487/Player1");
+    var win_param = parseURLParams(window.location.search);
+    var ip = win_param['ip'] || ['nowhere'];
+    var player = win_param['p'] || ['nobody'];
+    var url = "ws://" + ip[0] + ":9487/" + player[0];
+    console.log(url);
+    var socket = new WebSocket(url);
     var connecting = false;
     socket.addEventListener('open', function (event) {
-        console.log('Open')
+        console.log('Open');
         socket.send('Hello Server!');
         connecting = true;
     });
@@ -157,29 +183,29 @@
         document.body.style.backgroundColor = (meter.checkClipping() ? 'red' : 'green');
         requestAnimationFrame(volume_upd);
     }
-    navigator.getUserMedia(
-        {
-            "audio": {
-                "mandatory": {
-                    "googEchoCancellation": "false",
-                    "googAutoGainControl": "false",
-                    "googNoiseSuppression": "false",
-                    "googHighpassFilter": "false"
-                },
-                "optional": []
-            },
-        },
-        function(stream) {
-            mediaStreamSource = audioContext.createMediaStreamSource(stream);
-            meter = createAudioMeter(audioContext);
-            mediaStreamSource.connect(meter);
-            volume_upd();
-        },
-        function() {
-            document.body.style.backgroundColor = '#333333';
-            console.log('Stream generation failed.');
-        }
-    );
+    // navigator.getUserMedia(
+    //     {
+    //         "audio": {
+    //             "mandatory": {
+    //                 "googEchoCancellation": "false",
+    //                 "googAutoGainControl": "false",
+    //                 "googNoiseSuppression": "false",
+    //                 "googHighpassFilter": "false"
+    //             },
+    //             "optional": []
+    //         },
+    //     },
+    //     function(stream) {
+    //         mediaStreamSource = audioContext.createMediaStreamSource(stream);
+    //         meter = createAudioMeter(audioContext);
+    //         mediaStreamSource.connect(meter);
+    //         volume_upd();
+    //     },
+    //     function() {
+    //         document.body.style.backgroundColor = '#333333';
+    //         alert('Audio stream generation failed.');
+    //     }
+    // );
 
     // Accelerator
     window.ondevicemotion = function(event) {
