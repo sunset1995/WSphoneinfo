@@ -125,7 +125,7 @@
 <script>
 
     // Websocket
-    var socket = new WebSocket("ws://192.168.0.13:9487/Player1");
+    var socket = new WebSocket("wss://192.168.0.13:9487/Player1");
     var connecting = false;
     socket.addEventListener('open', function (event) {
         console.log('Open')
